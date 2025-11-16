@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aetherium RV Trainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'base': '#222226',
+              'surface': '#29292e',
+              'overlay': '#313136',
+              'muted': '#7f7f89',
+              'subtle': '#b3b3be',
+              'primary': '#8c7cf5',
+              'primary-hover': '#a395ff',
+            },
+            boxShadow: {
+              'neumorphic-out': '8px 8px 16px #1c1c1f, -8px -8px 16px #28282d',
+              'neumorphic-in': 'inset 8px 8px 16px #1c1c1f, inset -8px -8px 16px #28282d',
+              'neumorphic-out-sm': '4px 4px 8px #1c1c1f, -4px -4px 8px #28282d',
+              'neumorphic-in-sm': 'inset 4px 4px 8px #1c1c1f, inset -4px -4px 8px #28282d',
+            },
+            keyframes: {
+              gradient: {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              }
+            },
+            animation: {
+              gradient: 'gradient 15s ease infinite',
+            }
+          },
+        },
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@10/dist/framer-motion.umd.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24"
+  }
+}
+</script>
+</head>
+  <body class="bg-base text-subtle antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
