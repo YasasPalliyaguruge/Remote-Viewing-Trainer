@@ -16,10 +16,6 @@ type GameState =
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({ view: 'onboarding' });
 
-  const handleStartOnboarding = () => {
-    setGameState({ view: 'onboarding' });
-  };
-
   const handleFinishOnboarding = () => {
     setGameState({ view: 'dashboard' });
   };

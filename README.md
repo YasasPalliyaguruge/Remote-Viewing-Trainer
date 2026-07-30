@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Aetherium Remote-Viewing Trainer
 
-# Run and deploy your AI Studio app
+![Aetherium remote-viewing trainer cover](assets/recruiter/cover.png)
 
-This contains everything you need to run your app locally.
+> **Portfolio lens:** A staged practice experience that guides attention from onboarding through feedback, while staying candid about its client-side limitations.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1PShNIGsmCzlSNUEf607RUBO2TzTbatNz
+Aetherium is a React/Vite exercise app for running a remote-viewing session from onboarding to feedback. It supports configured targets, timed or self-paced sessions, note-taking, and Gemini-assisted feedback at the reveal stage.
 
-## Run Locally
+The target identifier and entropy score are session values. This is a client-side practice tool, not a cryptographic target-sealing system, and it does not keep a server-side training history.
 
-**Prerequisites:**  Node.js
+## Local run
 
+```bash
+npm install
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Create `.env.local` beside `package.json`:
+
+```env
+GEMINI_API_KEY=your_key
+```
+
+Run `npm run dev` while working on the app. `npm run build` produces a production bundle and `npm run preview` serves that bundle locally.
+
+The key is exposed to the browser by the Vite configuration, so use a restricted Gemini key and keep `.env.local` out of version control.
