@@ -1,9 +1,14 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import type { SessionResult, Target, Difficulty, Category, PracticeMode } from '../types';
+import React, { useCallback, useEffect, useState } from 'react';
+import type {
+  Category,
+  Difficulty,
+  PracticeMode,
+  SessionResult,
+  Target,
+} from '../types';
 import { generateTarget } from '../services/geminiService';
-import NeumorphicCard from './ui/NeumorphicCard';
 import Button from './ui/Button';
+import NeumorphicCard from './ui/NeumorphicCard';
 import { LockIcon } from './icons';
 
 interface TrainingSessionProps {
@@ -13,7 +18,19 @@ interface TrainingSessionProps {
   mode: PracticeMode;
 }
 
-const TrainingSession: React.FC<TrainingSessionProps> = ({ onFinish, difficulty, category, mode }) => {
+const getTargetErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Failed to generate a target. Please try again.';
+};
+
+const TrainingSession: React.FC<TrainingSessionProps> = ({
+  onFinish,
+  difficulty,
+  category,
+  mode,
+}) => {
   const [target, setTarget] = useState<Target | null>(null);
   const [userDescription, setUserDescription] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -22,79 +39,93 @@ const TrainingSession: React.FC<TrainingSessionProps> = ({ onFinish, difficulty,
   const fetchTarget = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setTarget(null);
+
     try {
-      const generatedTarget = await generateTarget(difficulty, category);
-      setTarget(generatedTarget);
-    } catch (err) {
-      setError('Failed to generate a target. Please try again.');
+      setTarget(await generateTarget(difficulty, category));
+    } catch (targetError) {
+      setError(getTargetErrorMessage(targetError));
     } finally {
       setIsLoading(false);
     }
-  }, [difficulty, category]);
+  }, [category, difficulty]);
 
   useEffect(() => {
-    fetchTarget();
+    void fetchTarget();
   }, [fetchTarget]);
 
-  const handleSubmit = async () => {
-    if (!target) return;
-    // In a real app, the analysis would happen here or be passed to the next component.
-    // For simplicity, we pass the raw data to the Feedback component to handle analysis.
-    const dummyAnalysis = {
-        accuracyRatio: 0,
-        strengthOfEvidence: 0,
-        statisticalSignificance: 0,
-        summary: "Loading analysis...",
-        attributeMatches: [],
-    };
+  const handleSubmit = () => {
+    const description = userDescription.trim();
+    if (!target || !description) return;
 
     onFinish({
       target,
-      userDescription,
-      aiAnalysis: dummyAnalysis // This will be replaced by a real analysis in FeedbackReveal
+      userDescription: description,
     });
   };
 
   return (
-    <NeumorphicCard className="max-w-2xl mx-auto" padding="p-8">
+    <NeumorphicCard className="mx-auto max-w-2xl" padding="p-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">Training Session</h1>
+        <h1 className="mb-2 text-3xl font-bold text-white">Training Session</h1>
         <p className="text-muted">{mode}</p>
       </div>
 
-      <div className="my-8 p-6 bg-base rounded-xl shadow-neumorphic-in text-center">
-        {isLoading && <p className="text-primary animate-pulse">Generating and sealing target...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+      <div className="my-8 rounded-xl bg-base p-6 text-center shadow-neumorphic-in">
+        {isLoading && (
+          <p className="animate-pulse text-primary">Preparing a target...</p>
+        )}
+
+        {error && !isLoading && (
+          <div className="space-y-4" role="alert">
+            <p className="text-red-400">{error}</p>
+            <Button onClick={() => void fetchTarget()}>Try Again</Button>
+          </div>
+        )}
+
         {target && !isLoading && (
           <div className="flex flex-col items-center">
-            <LockIcon className="w-12 h-12 text-yellow-400 mb-4" />
-            <h2 className="text-2xl font-semibold text-white">Target Acquired & Sealed</h2>
-            <p className="text-muted mt-1">Target ID: {target.id}</p>
-            <p className="text-muted">Entropy Score: {target.entropyScore.toFixed(2)}</p>
+            <LockIcon className="mb-4 h-12 w-12 text-yellow-400" />
+            <h2 className="text-2xl font-semibold text-white">Target Ready</h2>
+            <p className="mt-1 text-muted">Target ID: {target.id}</p>
+            <p className="text-muted">
+              Session randomness marker: {target.randomnessMarker.toFixed(2)}
+            </p>
+            <p className="mt-3 max-w-lg text-xs text-muted">
+              The target is kept out of the visible interface until feedback. This
+              client-side exercise does not provide cryptographic target sealing.
+            </p>
           </div>
         )}
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-lg font-semibold text-white mb-3">
+        <label
+          htmlFor="description"
+          className="mb-3 block text-lg font-semibold text-white"
+        >
           Record Your Impressions
         </label>
         <textarea
           id="description"
           rows={10}
           value={userDescription}
-          onChange={(e) => setUserDescription(e.target.value)}
+          onChange={(event) => setUserDescription(event.target.value)}
           placeholder="Describe shapes, colors, textures, sounds, feelings, concepts..."
-          className="w-full bg-base p-4 rounded-xl shadow-neumorphic-in text-subtle placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-          disabled={isLoading || !!error}
+          className="w-full rounded-xl bg-base p-4 text-subtle shadow-neumorphic-in transition-all placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary"
+          disabled={isLoading || Boolean(error)}
+          maxLength={5000}
         />
+        <p className="mt-2 text-right text-xs text-muted">
+          {userDescription.length.toLocaleString()} / 5,000
+        </p>
       </div>
 
       <div className="mt-8 text-center">
         <Button
           onClick={handleSubmit}
-          disabled={!userDescription || !target}
-          className="disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!userDescription.trim() || !target || isLoading}
+          className="disabled:cursor-not-allowed disabled:opacity-50"
         >
           Complete Session & Reveal Target
         </Button>
