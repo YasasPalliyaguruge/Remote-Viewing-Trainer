@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { Category, Difficulty, PracticeMode } from '../types';
+import { Category, Difficulty } from '../types';
+import type { PracticeMode } from '../types';
 import {
   CATEGORIES,
   DIFFICULTY_LEVELS,
