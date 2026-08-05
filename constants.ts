@@ -1,30 +1,62 @@
-
 import React from 'react';
-// Fix: Changed type-only import to value import to access enum members.
-import { Difficulty, Category, PracticeMode } from './types';
-import { TargetIcon, ClockIcon, TrophyIcon, UsersIcon } from './components/icons';
+import { Category, Difficulty, PracticeMode } from './types';
+import { TargetIcon } from './components/icons';
 
-export const DIFFICULTY_LEVELS: { level: Difficulty; description: string; color: string }[] = [
-  // Fix: Used enum members instead of string literals.
-  { level: Difficulty.Beginner, description: 'Basic shapes and colors.', color: 'text-green-400' },
-  { level: Difficulty.Intermediate, description: 'Complex objects and simple scenes.', color: 'text-blue-400' },
-  { level: Difficulty.Advanced, description: 'Dynamic locations and sensory data.', color: 'text-purple-400' },
-  { level: Difficulty.Expert, description: 'Historical events and abstract feelings.', color: 'text-yellow-400' },
-  { level: Difficulty.Master, description: 'Abstract concepts and timelines.', color: 'text-red-400' },
+export const DIFFICULTY_LEVELS: {
+  level: Difficulty;
+  description: string;
+  color: string;
+}[] = [
+  {
+    level: Difficulty.Beginner,
+    description: 'Basic shapes and colors.',
+    color: 'text-green-400',
+  },
+  {
+    level: Difficulty.Intermediate,
+    description: 'Common objects described through sensory details.',
+    color: 'text-blue-400',
+  },
+  {
+    level: Difficulty.Advanced,
+    description: 'Dynamic locations and atmospheric sensory details.',
+    color: 'text-purple-400',
+  },
+  {
+    level: Difficulty.Expert,
+    description: 'Events, emotions, and surreal scenes.',
+    color: 'text-yellow-400',
+  },
+  {
+    level: Difficulty.Master,
+    description: 'Abstract concepts expressed through metaphor.',
+    color: 'text-red-400',
+  },
 ];
 
 export const CATEGORIES: { name: Category; description: string }[] = [
-    // Fix: Used enum members instead of string literals.
-    { name: Category.Object, description: 'Focus on form, texture, color, and sound.'},
-    { name: Category.Location, description: 'Explore distinct geographical or architectural places.'},
-    { name: Category.Event, description: 'Perceive moments in time, past or present.'},
+  {
+    name: Category.Object,
+    description: 'Focus on form, texture, color, sound, and temperature.',
+  },
+  {
+    name: Category.Location,
+    description: 'Explore environmental, architectural, and atmospheric cues.',
+  },
+  {
+    name: Category.Event,
+    description: 'Explore the sensory and emotional atmosphere of a moment.',
+  },
 ];
 
-// Fix: Imported React to resolve errors with React.FC and React.SVGProps.
-export const PRACTICE_MODES: { mode: PracticeMode; description: string; Icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
-  // Fix: Used enum members instead of string literals.
-  { mode: PracticeMode.Solo, description: 'A standard, self-paced session.', Icon: TargetIcon },
-  { mode: PracticeMode.Timed, description: 'Race against the clock to capture impressions.', Icon: ClockIcon },
-  { mode: PracticeMode.Tournament, description: 'Compete on global leaderboards.', Icon: TrophyIcon },
-  { mode: PracticeMode.Collaborative, description: 'Work with others to describe a single target.', Icon: UsersIcon },
+export const PRACTICE_MODES: {
+  mode: PracticeMode;
+  description: string;
+  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+}[] = [
+  {
+    mode: PracticeMode.Solo,
+    description: 'A self-paced sensory-description comparison exercise.',
+    Icon: TargetIcon,
+  },
 ];
