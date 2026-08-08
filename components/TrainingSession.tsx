@@ -19,10 +19,13 @@ interface TrainingSessionProps {
 }
 
 const getTargetErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
+  if (
+    error instanceof Error &&
+    error.message.startsWith('Gemini is not configured')
+  ) {
     return error.message;
   }
-  return 'Failed to generate a target. Please try again.';
+  return 'The target could not be prepared. Check your connection and try again.';
 };
 
 const TrainingSession: React.FC<TrainingSessionProps> = ({
