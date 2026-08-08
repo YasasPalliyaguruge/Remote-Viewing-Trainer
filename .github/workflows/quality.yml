@@ -34,11 +34,16 @@ jobs:
         run: npm run build
 
   lockfile-candidate:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/recruiter-readiness'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: Check out repository
+      - name: Check out pull-request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -52,7 +57,6 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Audit production dependencies
-        continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
 
       - name: Type-check candidate
@@ -63,9 +67,14 @@ jobs:
           GEMINI_API_KEY: build-placeholder-key
         run: npm run build
 
-      - name: Upload lockfile candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: remote-viewing-lockfile-candidate
-          path: package-lock.json
-          if-no-files-found: error
+      - name: Commit validated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already matches the validated dependency tree."
+            exit 0
+          fi
+          git commit -m "Add reproducible npm lockfile"
+          git push origin "HEAD:${{ github.head_ref }}"
