@@ -21,9 +21,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Type-check
         run: npm run typecheck
@@ -32,49 +36,3 @@ jobs:
         env:
           GEMINI_API_KEY: build-placeholder-key
         run: npm run build
-
-  lockfile-candidate:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/recruiter-readiness'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Check out pull-request branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Generate npm lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-
-      - name: Reinstall from lockfile
-        run: npm ci --no-audit --no-fund
-
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
-
-      - name: Type-check candidate
-        run: npm run typecheck
-
-      - name: Build candidate
-        env:
-          GEMINI_API_KEY: build-placeholder-key
-        run: npm run build
-
-      - name: Commit validated lockfile
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          if git diff --cached --quiet; then
-            echo "Lockfile already matches the validated dependency tree."
-            exit 0
-          fi
-          git commit -m "Add reproducible npm lockfile"
-          git push origin "HEAD:${{ github.head_ref }}"
