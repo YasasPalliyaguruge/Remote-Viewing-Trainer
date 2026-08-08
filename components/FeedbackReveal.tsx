@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { AIAnalysis, SessionResult } from '../types';
-import { analyzeSession } from '../services/geminiService';
 import Button from './ui/Button';
 import NeumorphicCard from './ui/NeumorphicCard';
 import ProgressBar from './ui/ProgressBar';
@@ -35,6 +34,7 @@ const FeedbackReveal: React.FC<FeedbackRevealProps> = ({
     setAnalysis(null);
 
     try {
+      const { analyzeSession } = await import('../services/geminiService');
       setAnalysis(
         await analyzeSession(
           result.target.description,
