@@ -32,3 +32,40 @@ jobs:
         env:
           GEMINI_API_KEY: build-placeholder-key
         run: npm run build
+
+  lockfile-candidate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate npm lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Reinstall from lockfile
+        run: npm ci --no-audit --no-fund
+
+      - name: Audit production dependencies
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Type-check candidate
+        run: npm run typecheck
+
+      - name: Build candidate
+        env:
+          GEMINI_API_KEY: build-placeholder-key
+        run: npm run build
+
+      - name: Upload lockfile candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: remote-viewing-lockfile-candidate
+          path: package-lock.json
+          if-no-files-found: error
