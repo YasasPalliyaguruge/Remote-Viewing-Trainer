@@ -12,8 +12,13 @@ interface FeedbackRevealProps {
 }
 
 const getAnalysisErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return 'The AI-assisted comparison could not be generated.';
+  if (
+    error instanceof Error &&
+    error.message.startsWith('Gemini is not configured')
+  ) {
+    return error.message;
+  }
+  return 'The AI-assisted comparison could not be generated. Please try again.';
 };
 
 const FeedbackReveal: React.FC<FeedbackRevealProps> = ({
