@@ -6,7 +6,6 @@ import type {
   SessionResult,
   Target,
 } from '../types';
-import { generateTarget } from '../services/geminiService';
 import Button from './ui/Button';
 import NeumorphicCard from './ui/NeumorphicCard';
 import { LockIcon } from './icons';
@@ -45,6 +44,7 @@ const TrainingSession: React.FC<TrainingSessionProps> = ({
     setTarget(null);
 
     try {
+      const { generateTarget } = await import('../services/geminiService');
       setTarget(await generateTarget(difficulty, category));
     } catch (targetError) {
       setError(getTargetErrorMessage(targetError));
