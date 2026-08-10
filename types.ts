@@ -1,4 +1,3 @@
-
 export enum Difficulty {
   Beginner = 'Beginner',
   Intermediate = 'Intermediate',
@@ -25,19 +24,18 @@ export interface Target {
   description: string;
   difficulty: Difficulty;
   category: Category;
-  entropyScore: number;
+  randomnessMarker: number;
 }
 
 export interface SessionResult {
   target: Target;
   userDescription: string;
-  aiAnalysis: AIAnalysis;
 }
 
 export interface AIAnalysis {
-  accuracyRatio: number;
-  strengthOfEvidence: number;
-  statisticalSignificance: number;
+  similarityScore: number;
+  evidenceScore: number;
+  distinctivenessScore: number;
   summary: string;
   attributeMatches: {
     attribute: string;

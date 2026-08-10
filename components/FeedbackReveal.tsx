@@ -1,88 +1,197 @@
-
-import React, { useState, useEffect } from 'react';
-import type { SessionResult, AIAnalysis } from '../types';
-import { analyzeSession } from '../services/geminiService';
-import NeumorphicCard from './ui/NeumorphicCard';
-import Button from './ui/Button';
-import ProgressBar from './ui/ProgressBar';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import type { AIAnalysis, SessionResult } from '../types';
+import Button from './ui/Button';
+import NeumorphicCard from './ui/NeumorphicCard';
+import ProgressBar from './ui/ProgressBar';
 
 interface FeedbackRevealProps {
   result: SessionResult;
   onReturnToDashboard: () => void;
 }
 
-const FeedbackReveal: React.FC<FeedbackRevealProps> = ({ result, onReturnToDashboard }) => {
+const getAnalysisErrorMessage = (error: unknown): string => {
+  if (
+    error instanceof Error &&
+    error.message.startsWith('Gemini is not configured')
+  ) {
+    return error.message;
+  }
+  return 'The AI-assisted comparison could not be generated. Please try again.';
+};
+
+const FeedbackReveal: React.FC<FeedbackRevealProps> = ({
+  result,
+  onReturnToDashboard,
+}) => {
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const getAnalysis = async () => {
-      setIsLoading(true);
-      const sessionAnalysis = await analyzeSession(result.target.description, result.userDescription);
-      setAnalysis(sessionAnalysis);
+  const runAnalysis = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setAnalysis(null);
+
+    try {
+      const { analyzeSession } = await import('../services/geminiService');
+      setAnalysis(
+        await analyzeSession(
+          result.target.description,
+          result.userDescription,
+        ),
+      );
+    } catch (analysisError) {
+      setError(getAnalysisErrorMessage(analysisError));
+    } finally {
       setIsLoading(false);
-    };
-    getAnalysis();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
   }, [result.target.description, result.userDescription]);
 
+  useEffect(() => {
+    void runAnalysis();
+  }, [runAnalysis]);
+
   const renderAttributeMatches = () => {
-    if (!analysis || !analysis.attributeMatches) return null;
+    if (!analysis?.attributeMatches.length) return null;
 
     return (
       <div className="space-y-2">
         {analysis.attributeMatches.map((item, index) => (
-          <div key={index} className="flex items-center justify-between bg-base p-3 rounded-lg shadow-neumorphic-in-sm">
-            <span className="text-muted flex-1">{item.attribute}</span>
+          <div
+            key={`${item.attribute}-${index}`}
+            className="flex items-center justify-between rounded-lg bg-base p-3 shadow-neumorphic-in-sm"
+          >
+            <span className="flex-1 text-muted">{item.attribute}</span>
             <div className="flex items-center gap-4">
-                <span className={`w-4 h-4 rounded-full ${item.targetPresence ? 'bg-blue-400' : 'bg-overlay'}`} title="Present in Target"></span>
-                <span className={`w-4 h-4 rounded-full ${item.userPresence ? 'bg-purple-400' : 'bg-overlay'}`} title="Present in Your Description"></span>
-                <span className={`font-bold text-xs px-2 py-1 rounded ${item.match ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                  {item.match ? 'MATCH' : 'MISS'}
-                </span>
+              <span
+                className={`h-4 w-4 rounded-full ${item.targetPresence ? 'bg-blue-400' : 'bg-overlay'}`}
+                title="Present in target text"
+                aria-label={
+                  item.targetPresence
+                    ? 'Present in target text'
+                    : 'Not present in target text'
+                }
+              />
+              <span
+                className={`h-4 w-4 rounded-full ${item.userPresence ? 'bg-purple-400' : 'bg-overlay'}`}
+                title="Present in your description"
+                aria-label={
+                  item.userPresence
+                    ? 'Present in your description'
+                    : 'Not present in your description'
+                }
+              />
+              <span
+                className={`rounded px-2 py-1 text-xs font-bold ${
+                  item.match
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-red-500/20 text-red-400'
+                }`}
+              >
+                {item.match ? 'OVERLAP' : 'MISS'}
+              </span>
             </div>
           </div>
         ))}
-        <div className="flex justify-end gap-4 text-xs pt-2 text-muted">
-            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-blue-400"></span>Target</div>
-            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-purple-400"></span>You</div>
+
+        <div className="flex justify-end gap-4 pt-2 text-xs text-muted">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-blue-400" />
+            Target text
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-purple-400" />
+            Your text
+          </div>
         </div>
       </div>
     );
   };
 
-
   return (
     <NeumorphicCard padding="p-8">
-      <h1 className="text-3xl font-bold text-white text-center mb-6">Session Feedback</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <NeumorphicCard className="bg-base shadow-neumorphic-in" padding="p-4">
-          <h2 className="text-xl font-semibold text-primary mb-2">Target Data</h2>
-          <p className="text-subtle whitespace-pre-wrap font-mono text-sm">{result.target.description}</p>
+      <h1 className="mb-6 text-center text-3xl font-bold text-white">
+        Session Feedback
+      </h1>
+
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <NeumorphicCard
+          className="bg-base shadow-neumorphic-in"
+          padding="p-4"
+        >
+          <h2 className="mb-2 text-xl font-semibold text-primary">
+            Target Description
+          </h2>
+          <p className="whitespace-pre-wrap font-mono text-sm text-subtle">
+            {result.target.description}
+          </p>
         </NeumorphicCard>
-        <NeumorphicCard className="bg-base shadow-neumorphic-in" padding="p-4">
-          <h2 className="text-xl font-semibold text-purple-400 mb-2">Your Description</h2>
-          <p className="text-subtle whitespace-pre-wrap font-mono text-sm">{result.userDescription}</p>
+
+        <NeumorphicCard
+          className="bg-base shadow-neumorphic-in"
+          padding="p-4"
+        >
+          <h2 className="mb-2 text-xl font-semibold text-purple-400">
+            Your Description
+          </h2>
+          <p className="whitespace-pre-wrap font-mono text-sm text-subtle">
+            {result.userDescription}
+          </p>
         </NeumorphicCard>
       </div>
 
       <NeumorphicCard className="bg-overlay">
-        <h2 className="text-2xl font-bold text-white mb-4">AI Analysis</h2>
-        {isLoading || !analysis ? (
-          <div className="text-center p-8">
-            <p className="animate-pulse text-primary">AI is analyzing your session...</p>
+        <h2 className="mb-2 text-2xl font-bold text-white">
+          AI-Assisted Comparison
+        </h2>
+        <p className="mb-4 text-sm text-muted">
+          These values are model-generated heuristics for reflection. They are not
+          scientific measurements, statistical significance tests, or evidence of
+          paranormal ability.
+        </p>
+
+        {isLoading && (
+          <div className="p-8 text-center" aria-live="polite">
+            <p className="animate-pulse text-primary">
+              Comparing the two descriptions...
+            </p>
           </div>
-        ) : (
-          <motion.div initial={{opacity: 0}} animate={{opacity: 1}} transition={{duration: 0.5}}>
-            <p className="mb-6 text-subtle text-center italic">"{analysis.summary}"</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-              <ProgressBar label="Accuracy Ratio" value={analysis.accuracyRatio * 100} />
-              <ProgressBar label="Strength of Evidence" value={analysis.strengthOfEvidence * 100} />
-              <ProgressBar label="Significance" value={(1 - analysis.statisticalSignificance) * 100} />
+        )}
+
+        {error && !isLoading && (
+          <div className="space-y-4 p-8 text-center" role="alert">
+            <p className="text-red-400">{error}</p>
+            <Button onClick={() => void runAnalysis()}>Try Analysis Again</Button>
+          </div>
+        )}
+
+        {analysis && !isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="mb-6 text-center italic text-subtle">
+              {analysis.summary}
+            </p>
+            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <ProgressBar
+                label="Descriptive Similarity"
+                value={analysis.similarityScore * 100}
+              />
+              <ProgressBar
+                label="Evidence Specificity"
+                value={analysis.evidenceScore * 100}
+              />
+              <ProgressBar
+                label="Distinctiveness Estimate"
+                value={analysis.distinctivenessScore * 100}
+              />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-3">Attribute Matching</h3>
+            <h3 className="mb-3 text-lg font-semibold text-white">
+              Attribute Comparison
+            </h3>
             {renderAttributeMatches()}
           </motion.div>
         )}
